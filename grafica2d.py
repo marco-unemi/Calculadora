@@ -79,7 +79,7 @@ class GraficaEcuaciones2D:
 
         # Frame dentro del frame_grafico para alojar el canvas de Matplotlib
         self.grid_frame_resultado = ctk.CTkFrame(self.frame_grafico, width=400)  # Crea un frame dentro del frame de la gráfica para contener el gráfico de Matplotlib.
-        self.grid_frame_resultado.pack(pady=10, fill="both", expand=True)  # Empaqueta el frame con padding y se expande en ambas direcciones.
+        self.grid_frame_resultado.pack(pady=10)  # Empaqueta el frame con padding y se expande en ambas direcciones.
 
 
     def vaciar(self):

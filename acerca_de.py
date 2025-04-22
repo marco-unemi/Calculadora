@@ -36,7 +36,7 @@ class AcercaDe:
         label_info = ctk.CTkLabel(frame_info, text="Abril 2025 - Julio 2025", **estilo_label()).pack(padx=5, pady=(0, 5))
         
         label_info = ctk.CTkLabel(frame_info, text="Profesor:", **estilo_label(font_size=14)).pack(padx=5, pady=(5, 0))
-        label_info = ctk.CTkLabel(frame_info, text="Ing. ISIDRO FABRICIO MORALES TORRES", **estilo_label()).pack(padx=5, pady=(0, 5))
+        label_info = ctk.CTkLabel(frame_info, text="Ing. Isidro Fabricio Morales Torres", **estilo_label()).pack(padx=5, pady=(0, 5))
         
         label_info = ctk.CTkLabel(frame_info, text="Materia:", **estilo_label(font_size=14)).pack(padx=5, pady=(5, 0))
         label_info = ctk.CTkLabel(frame_info, text="Modelos matematicos y simulacion", **estilo_label()).pack(padx=5, pady=(0, 5))
