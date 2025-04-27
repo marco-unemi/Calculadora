@@ -1,61 +1,170 @@
 # app.py
-import customtkinter as ctk
-from utils import estilo_label, estilo_boton
-
-from matrices import OperacionesMatrices
-from ecuaciones import OperacionesEcuaciones
-from grafica2d import GraficaEcuaciones2D
-from grafica3d import GraficaEcuaciones3D
-from acerca_de import AcercaDe
-
-ctk.set_appearance_mode("System") # Establece el modo de apariencia de la aplicación para que coincida con el sistema operativo (claro u oscuro).
-ctk.set_default_color_theme("blue") # Establece el tema de color predeterminado de la aplicación a azul.
-
-# Ventana principal
-app = ctk.CTk() # Crea la ventana principal de la aplicación usando la clase CTk().
-app.geometry("1000x600") # Establece el tamaño inicial de la ventana a 1000 píxeles de ancho y 600 píxeles de alto.
-app.title("Mini programa de modelos matemáticos") # Establece el título de la ventana.
-
-# Menu lateral Izquierdo
-menu_frame = ctk.CTkFrame(app, width=200) # Crea un frame (contenedor) para el menú lateral izquierdo, con un ancho de 200 píxeles.
-menu_frame.pack(side="left", fill="y", padx=10, pady=10) # Empaqueta el frame a la izquierda de la ventana, lo rellena verticalmente y añade un padding horizontal y vertical de 10 píxeles.
-
-menu_label = ctk.CTkLabel(menu_frame, text="Menú de opciones", **estilo_label(font_size=16)) # Crea una etiqueta para el título del menú, utilizando la función estilo_label del archivo utils.py con un tamaño de fuente de 16.
-menu_label.pack(pady=10) # Empaqueta la etiqueta con un padding vertical de 10 píxeles.
-
-# Area derecha
-workspace_frame = ctk.CTkFrame(app) # Crea un frame para el área de trabajo principal, que se mostrará a la derecha del menú.
-workspace_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10) # Empaqueta el frame a la derecha, hace que se expanda para llenar el espacio restante y lo rellena tanto horizontal como verticalmente, con un padding de 10 píxeles.
+import customtkinter
+import os
+from PIL import Image
+from styles.styles import estilo_label_menu, estilo_boton_menu
+from utils import scrollable_frame
+from core.matrices import Matriz
+from core.polinomios import Polinomio
+from core.vectores import Vector
+from core.grafica2d import Grafica2D
+from core.grafica3d import Grafica3D
+from core.derivacion import Derivacion
+from core.integracion import Integracion
+from core.ecuaciones import Ecuacion
+from core.acerca_de import AcercaDe
 
 
-# Instancias de las clases
-operaciones_matrices = OperacionesMatrices(workspace_frame) 
-operacionesEcuaciones = OperacionesEcuaciones(workspace_frame) 
-graficaEcuaciones2D = GraficaEcuaciones2D(workspace_frame)
-graficaEcuaciones3D = GraficaEcuaciones3D(workspace_frame) 
-acerca_de = AcercaDe(workspace_frame) 
+class App(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+        self.geometry("1000x600")
+        self._set_appearance_mode("System")
+        self.title("Calculadora")
+        self.scrollable_frame = None
+
+        image_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), "assets/icons")
+        light_img = Image.open(os.path.join(
+            image_path, "info_dark.png")).resize((20, 20))
+        dark_img = Image.open(os.path.join(
+            image_path, "info_light.png")).resize((20, 20))
+
+        self.info_image = customtkinter.CTkImage(
+            light_image=light_img, dark_image=dark_img, size=(20, 20))
+
+        # Frame contenedor para el menú y el borde
+        self.menu_container_frame = customtkinter.CTkFrame(
+            self, corner_radius=0)
+        self.menu_container_frame.pack(side="left", fill="y")
+        self.menu_container_frame.grid_rowconfigure(0, weight=1)
+        self.menu_container_frame.grid_columnconfigure(0, weight=1)
+        self.menu_container_frame.grid_columnconfigure(1, weight=0)
+
+        # create navigation frame
+        self.navigation_frame = customtkinter.CTkFrame(
+            # Ligeramente más angosto
+            self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "gray10"))
+        self.navigation_frame.grid(row=0, column=0, sticky="nsew")
+        self.navigation_frame.grid_rowconfigure(10, weight=1)
+
+        border_right_frame = customtkinter.CTkFrame(
+            self.menu_container_frame, width=2, fg_color="gray50", corner_radius=0)
+        border_right_frame.grid(row=0, column=1, sticky="ns")
+
+        # Label del menu
+        self.navigation_frame_label = customtkinter.CTkLabel(
+            self.navigation_frame, text="UNEMI", compound="left", **estilo_label_menu)
+        self.navigation_frame_label.grid(row=0, column=0, padx=80, pady=20)
+
+        # Botones del menú
+        self.menu_buttons = {
+            "Matrices": self.matrices_button_event,
+            "Polinomios": self.polinomios_button_event,
+            "Vectores": self.vectores_button_event,
+            "Gráficas 2D": self.graficas_2D_button_event,
+            "Gráficas 3D": self.graficas_3D_button_event,
+            "Derivación": self.derivacion_button_event,
+            "Integración": self.integracion_button_event,
+            "Ecuaciones": self.ecuacion_button_event,
+            "Acerca de": self.acerca_de_button_event
+        }
+
+        self.menu_buttons_widgets = {}
+
+        # Mostrar los botones
+        row = 1
+        for option, command in self.menu_buttons.items():
+
+            if option.lower().replace(" ", "_") == "acerca_de":
+                row += 2
+
+            button = customtkinter.CTkButton(
+                self.navigation_frame,
+                text=option,
+                command=command,
+                **estilo_boton_menu,
+                image=self.info_image if option.lower().replace(
+                    " ", "_") == "acerca_de" else None
+            )
+
+            button.grid(row=row, column=0, sticky="ew")
+            self.menu_buttons_widgets[option.lower().replace(
+                " ", "_")] = button
+
+            row += 1
+
+        # create workspace frame
+        self.workspace_frame = customtkinter.CTkFrame(self)
+        self.workspace_frame.pack(side="right", expand=True, fill="both")
+
+        self.scrollable_frame = scrollable_frame(self.workspace_frame)
+
+        # Instancias
+        self.matrices = Matriz(self.scrollable_frame)
+        self.polinomios = Polinomio(self.scrollable_frame)
+        self.vectores = Vector(self.scrollable_frame)
+        self.graficas_2D = Grafica2D(self.scrollable_frame)
+        self.graficas_3D = Grafica3D(self.scrollable_frame)
+        self.derivacion = Derivacion(self.scrollable_frame)
+        self.integracion = Integracion(self.scrollable_frame)
+        self.ecuaciones = Ecuacion(self.scrollable_frame)
+        self.acerca_de = AcercaDe(self.scrollable_frame)
+
+        self.selected_button = None
+
+    def select_frame_by_name(self, name):
+        if self.selected_button:
+            self.selected_button.configure(
+                fg_color="transparent", border_width=0)
+
+        # Obtiene el nuevo botón
+        button = self.menu_buttons_widgets.get(name.lower().replace(" ", "_"))
+
+        if button:
+            button.configure(fg_color=("gray75", "gray25"),
+                             border_color=("black", "white"), border_width=1)
+            self.selected_button = button
+
+    # Eventos de botones
+
+    def matrices_button_event(self):
+        self.select_frame_by_name("matrices")
+        self.matrices.mostrar_contenido()
+
+    def polinomios_button_event(self):
+        self.select_frame_by_name("polinomios")
+        self.polinomios.mostrar_contenido()
+
+    def vectores_button_event(self):
+        self.select_frame_by_name("vectores")
+        self.vectores.mostrar_contenido()
+
+    def graficas_2D_button_event(self):
+        self.select_frame_by_name("gráficas_2d")
+        self.graficas_2D.mostrar_contenido()
+
+    def graficas_3D_button_event(self):
+        self.select_frame_by_name("gráficas_3d")
+        self.graficas_3D.mostrar_contenido()
+
+    def derivacion_button_event(self):
+        self.select_frame_by_name("derivación")
+        self.derivacion.mostrar_contenido()
+
+    def integracion_button_event(self):
+        self.select_frame_by_name("integración")
+        self.integracion.mostrar_contenido()
+
+    def ecuacion_button_event(self):
+        self.select_frame_by_name("ecuaciones")
+        self.ecuaciones.mostrar_contenido()
+
+    def acerca_de_button_event(self):
+        self.select_frame_by_name("acerca_de")
+        self.acerca_de.mostrar_contenido()
 
 
-# Botones del menú
-menu_buttons = {
-    "Operaciones con matrices y vectores": operaciones_matrices.mostrar_contenido, 
-    "Operaciones con ecuaciones": operacionesEcuaciones.mostrar_contenido, 
-    "Gráfica de ecuaciones en 2D": graficaEcuaciones2D.mostrar_contenido, 
-    "Gráfica de ecuaciones en 3D": graficaEcuaciones3D.mostrar_contenido, 
-    "Acerca de": acerca_de.mostrar_contenido, 
-}
-
-
-# Mostrar los botones
-for option, command in menu_buttons.items():
-    button = ctk.CTkButton(
-        menu_frame,
-        text=option,
-        command=command,
-        **estilo_boton() #
-    )
-    button.pack(pady=5, padx=20, fill="x") 
-
-
-# Inicializar la app
-app.mainloop() # Inicia el bucle principal de la aplicación Tkinter, que es necesario para que la interfaz de usuario sea interactiva y se mantenga en pantalla.
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
