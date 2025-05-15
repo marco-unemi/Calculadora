@@ -128,6 +128,7 @@ class Matriz:
         self.transpuesta_b_button = ctk.CTkButton(self.frame_operaciones, text="Transpuesta (B)", command=self.transpuesta_b)
         self.transpuesta_b_button.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
         
+        
         # ------ Fila 3: Resultado ------ #
         self.frame_resultado = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "gray12"))
         self.frame_resultado.pack(pady=20, padx=20, fill="both", expand=True) 
@@ -151,35 +152,54 @@ class Matriz:
         self.frame_resultado_grid = ctk.CTkFrame(self.frame_contenedor, fg_color=("white", "gray10"))
         self.frame_resultado_grid.grid(row=0, column=1, padx=(5,20), pady=10, sticky="nsew")
 
+
     # ------ Funciones para generar matrices ------ #
+    def leer_entradas_matrices(self):
+        try:
+            filas_a = int(self.filas_a.get())
+            columnas_a = int(self.columnas_a.get())
+            filas_b = int(self.filas_b.get())
+            columnas_b = int(self.columnas_b.get())
+            matriz_a = np.zeros((filas_a, columnas_a))
+            matriz_b = np.zeros((filas_b, columnas_b))
+            idx = 0
+            for i in range(filas_a):
+                for j in range(columnas_a):
+                    val = self.matriz_a_entries[idx].get()
+                    if val.strip() == '':
+                        raise ValueError(f"Falta un valor en la matriz A, fila {i+1}, columna {j+1}")
+                    matriz_a[i, j] = float(val)
+                    idx += 1
+            idx = 0
+            for i in range(filas_b):
+                for j in range(columnas_b):
+                    val = self.matriz_b_entries[idx].get()
+                    if val.strip() == '':
+                        raise ValueError(f"Falta un valor en la matriz B, fila {i+1}, columna {j+1}")
+                    matriz_b[i, j] = float(val)
+                    idx += 1
+            self.matriz_a = matriz_a
+            self.matriz_b = matriz_b
+            return matriz_a, matriz_b
+        except Exception as e:
+            raise e
+
     def generar_matriz_a(self):
         for entry in self.matriz_a_entries:
             entry.destroy()
         self.matriz_a_entries = []
-        
         try:
             filas = int(self.filas_a.get())
             columnas = int(self.columnas_a.get())
-            self.matriz_a = np.zeros((filas, columnas))
+            self.matriz_a = None  # No se actualiza hasta leer entradas
             for i in range(filas):
                 for j in range(columnas):
                     entry = ctk.CTkEntry(self.grid_frame_a, width=50, justify="center")
                     entry.grid(row=i, column=j, padx=5, pady=5)
-                    entry.bind("<KeyRelease>", lambda event, r=i, c=j: self.actualizar_matriz_a(r, c, event))
                     self.matriz_a_entries.append(entry)
         except ValueError:
             messagebox.showerror("Error", "Ingrese números enteros válidos para las dimensiones de la Matriz A")
-            self.matriz_a = None 
-
-    def actualizar_matriz_a(self, fila, columna, event):
-        if self.matriz_a is not None: 
-            try:
-                value = float(event.widget.get()) 
-                self.matriz_a[fila, columna] = value 
-            except ValueError:
-                messagebox.showerror("Error", "Ingrese un número válido en la Matriz A")
-                event.widget.delete(0, ctk.END) 
-                self.matriz_a[fila, columna] = 0 
+            self.matriz_a = None
 
     def generar_matriz_b(self):
         for entry in self.matriz_b_entries:
@@ -188,27 +208,15 @@ class Matriz:
         try:
             filas = int(self.filas_b.get())
             columnas = int(self.columnas_b.get())
-            self.matriz_b = np.zeros((filas, columnas))
+            self.matriz_b = None  # No se actualiza hasta leer entradas
             for i in range(filas):
                 for j in range(columnas):
                     entry = ctk.CTkEntry(self.grid_frame_b, width=50, justify="center")
                     entry.grid(row=i, column=j, padx=5, pady=5)
-                    # Vincular al evento <KeyRelease> para actualización en tiempo real
-                    entry.bind("<KeyRelease>", lambda event, r=i, c=j: self.actualizar_matriz_b(r, c, event))
                     self.matriz_b_entries.append(entry)
         except ValueError:
             messagebox.showerror("Error:", "Ingrese números enteros válidos para las dimensiones de la Matriz B")
             self.matriz_b = None
-
-    def actualizar_matriz_b(self, fila, columna, event):
-        if self.matriz_b is not None:
-            try:
-                value = float(event.widget.get())
-                self.matriz_b[fila, columna] = value
-            except ValueError:
-                messagebox.showerror("Error", "Ingrese un número válido en la Matriz B")
-                event.widget.delete(0, ctk.END)
-                self.matriz_b[fila, columna] = 0
 
     def vaciar_matriz_a(self):
         self.matriz_a = None
@@ -241,123 +249,91 @@ class Matriz:
         
     # ------ Operaciones ------ #
     def sumar(self):
-        if self.matriz_a is None or self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue ambas matrices primero")
-            return
-        if self.matriz_a.shape != self.matriz_b.shape:
-            messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
-            return
         try:
-            resultado = self.matriz_a + self.matriz_b 
-            print(resultado)
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            if matriz_a.shape != matriz_b.shape:
+                messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
+                return
+            resultado = matriz_a + matriz_b
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A + B =')
-        except ValueError:
-            messagebox.showerror("Error", "Las dimensiones de las matrices deben ser iguales para la suma")
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al sumar matrices: {e}")
         
     def restar(self):
-        if self.matriz_a is None or self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue ambas matrices primero")
-            return
-        if self.matriz_a.shape != self.matriz_b.shape:
-            messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
-            return
         try:
-            resultado = self.matriz_a - self.matriz_b
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            if matriz_a.shape != matriz_b.shape:
+                messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
+                return
+            resultado = matriz_a - matriz_b
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A - B =')
-        except ValueError:
-            messagebox.showerror("Error", "Las dimensiones de las matrices deben ser iguales para la resta")
-            return
         except Exception as e:
-            self.mostrar_resultado(None, self.frame_resultado_grid)
-            messagebox.showerror("Error", f"Error al restar matrices: {e}")
-            return
+            self.mostrar_error(self.frame_resultado_grid, f"Error al restar matrices: {e}")
         
     def multiplicar(self):
-        if self.matriz_a is None or self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue ambas matrices primero")
-            return
         try:
-            resultado = np.dot(self.matriz_a, self.matriz_b)
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            resultado = np.dot(matriz_a, matriz_b)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A × B =')
-        except ValueError:
-            messagebox.showerror("Error", "El número de columnas de la Matriz A debe ser igual al número de filas de la Matriz B para la multiplicación")
-            return
         except Exception as e:
-            self.mostrar_resultado(None, self.frame_resultado_grid)
-            messagebox.showerror("Error", f"Error al multiplicar matrices: {e}")
-            return
+            self.mostrar_error(self.frame_resultado_grid, f"Error al multiplicar matrices: {e}")
         
     def determinante_a(self):
-        if self.matriz_a is None:
-            messagebox.showerror("Error", "Cargue la matriz (A) primero.")
-            return
         try:
-            resultado = np.linalg.det(self.matriz_a)
+            matriz_a, _ = self.leer_entradas_matrices()
+            resultado = np.linalg.det(matriz_a)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(A) =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_label, f"Error al calcular el determinante de A: {e}")
         
     def determinante_b(self):
-        if self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue la matriz (B) primero.")
-            return
         try:
-            resultado = np.linalg.det(self.matriz_b)
+            _, matriz_b = self.leer_entradas_matrices()
+            resultado = np.linalg.det(matriz_b)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(B) =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_label, f"Error al calcular el determinante de B: {e}")
         
     def inversa_a(self):
-        if self.matriz_a is None:
-            messagebox.showerror("Error", "Cargue la matriz (A) primero.")
-            return
         try:
-            det = np.linalg.det(self.matriz_a) 
+            matriz_a, _ = self.leer_entradas_matrices()
+            det = np.linalg.det(matriz_a)
             if det == 0:
                 messagebox.showerror("Error", "La Matriz A no es invertible (su determinante es cero).")
                 return
-            resultado = np.linalg.inv(self.matriz_a) 
+            resultado = np.linalg.inv(matriz_a)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A⁻¹ =')
-
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la inversa de A: {e}")
         
     def inversa_b(self):
-        if self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue la matriz (B) primero.")
-            return
         try:
-            det = np.linalg.det(self.matriz_b) 
+            _, matriz_b = self.leer_entradas_matrices()
+            det = np.linalg.det(matriz_b)
             if det == 0:
                 messagebox.showerror("Error", "La Matriz B no es invertible (su determinante es cero).")
                 return
-            resultado = np.linalg.inv(self.matriz_b) 
+            resultado = np.linalg.inv(matriz_b)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'B⁻¹ =')
-
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la inversa de B: {e}")
 
     def transpuesta_a(self):
-        if self.matriz_a is None:
-            messagebox.showerror("Error", "Cargue la matriz (A) primero.")
-            return
         try:
-            resultado = np.transpose(self.matriz_a)
+            matriz_a, _ = self.leer_entradas_matrices()
+            resultado = np.transpose(matriz_a)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Aᵀ =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la transpuesta de A: {e}")
             
     def transpuesta_b(self):
-        if self.matriz_b is None:
-            messagebox.showerror("Error", "Cargue la matriz (B) primero.")
-            return
         try:
-            resultado = np.transpose(self.matriz_b)
+            _, matriz_b = self.leer_entradas_matrices()
+            resultado = np.transpose(matriz_b)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Bᵀ =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la transpuesta de B: {e}")
+
 
     # ------ Funciones para mostrar errores y resultados ------ #
     def mostrar_error(self, frame, text):
@@ -434,5 +410,4 @@ class Matriz:
             self.frame_resultado_grid.grid_columnconfigure(0, weight=1)
             label_vacio = ctk.CTkLabel(self.frame_resultado_grid, text="No hay resultado para mostrar.")
             label_vacio.grid(row=0, column=0, sticky="nsew")
-            
-            
+ 

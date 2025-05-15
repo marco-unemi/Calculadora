@@ -35,6 +35,7 @@ class Integracion:
         
         self.entry_funcion = ctk.CTkEntry(self.frame_funcion, width=200, placeholder_text="Ej: e**x + 2*x")
         self.entry_funcion.pack(pady=5, padx=10)
+        self.entry_funcion.insert(0, "e**x + 2*x")
         self.entry_funcion.bind("<Return>", lambda event: self.actualizar_funcion())
         
         # --- Boton de vaciar función --- #
@@ -50,6 +51,7 @@ class Integracion:
 
         self.entry_limites = ctk.CTkEntry(self.frame_limites, width=200, placeholder_text="Ej: 0, 1")
         self.entry_limites.pack(pady=5, padx=10)
+        self.entry_limites.insert(0, "0, 1")
         self.entry_limites.bind("<Return>", lambda event: self.actualizar_limites())
         
         # --- Boton de vaciar limites --- #
@@ -120,26 +122,34 @@ class Integracion:
         self.limites = None
         self.entry_limites.delete(0, ctk.END)
 
+    def get_funcion(self):
+        return self.entry_funcion.get()
+
+    def get_limites(self):
+        texto = self.entry_limites.get()
+        try:
+            numeros = [float(x.strip()) for x in texto.split(',')]
+            if len(numeros) != 2:
+                return None
+            return numeros
+        except Exception:
+            return None
+
     def integrar(self):
         try:
-            if self.funcion is None:
+            funcion = self.get_funcion()
+            if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
-            
-            funcion_sympy = sp.sympify(self.funcion, locals={'e': sp.E})
+            funcion_sympy = sp.sympify(funcion, locals={'e': sp.E})
             resultado = sp.integrate(funcion_sympy, x)
-            
-            # Convertir el resultado a string y asegurarse de que la constante de integración se muestre como + C
             resultado_str = str(resultado)
             if 'C' in resultado_str:
-                # Si ya tiene una C, dejarlo como está
                 pass
             else:
-                # Si no tiene C, agregarla
                 resultado_str = f"{resultado_str} + C"
-            
             print(resultado)
-            self.mostrar_resultado(resultado_str, self.frame_resultado_grid, f"∫ {self.funcion.replace('**', '^')} =")
+            self.mostrar_resultado(resultado_str, self.frame_resultado_grid, f"∫ {funcion.replace('**', '^')} =")
             
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al integrar: {str(e)}")
@@ -147,20 +157,19 @@ class Integracion:
             
     def evaluar_integracion(self):
         try:
-            if self.funcion is None:
+            funcion = self.get_funcion()
+            limites = self.get_limites()
+            if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
-            
-            if self.limites is None:
+            if not limites:
                 self.mostrar_error(self.frame_resultado_grid, "Los límites no pueden estar vacíos")
                 return
-            
-            funcion_sympy = sp.sympify(self.funcion, locals={'e': sp.E})
-            resultado = sp.integrate(funcion_sympy, (x, self.limites[0], self.limites[1]))
-            
-            a = self.limites[0]
-            b = self.limites[1]
-            label = f"∫[{a}, {b}] {self.funcion.replace('**', '^')} ="
+            funcion_sympy = sp.sympify(funcion, locals={'e': sp.E})
+            resultado = sp.integrate(funcion_sympy, (x, limites[0], limites[1]))
+            a = limites[0]
+            b = limites[1]
+            label = f"∫[{a}, {b}] {funcion.replace('**', '^')} ="
             self.mostrar_resultado(resultado, self.frame_resultado_grid, label)
 
         except Exception as e:

@@ -1,4 +1,3 @@
-# app.py
 import customtkinter
 import os
 from PIL import Image
@@ -11,16 +10,19 @@ from core.grafica2d import Grafica2D
 from core.grafica3d import Grafica3D
 from core.derivacion import Derivacion
 from core.integracion import Integracion
-from core.ecuaciones import Ecuacion
 from core.acerca_de import AcercaDe
 
+from UI.UI_Ecuaciones_dif import UIEcuacionDiferencial
+from UI.UI_Sistema_de_ecuaciones import UISistemaEcuaciones
+from UI.UI_Modelo_matematico import UIModeloMatematico
+from UI.UI_SistemaDiferencial import UISistemaDiferencial
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.geometry("1000x600")
         self._set_appearance_mode("System")
-        self.title("Calculadora")
+        self.title("TotalMath")
         self.scrollable_frame = None
 
         image_path = os.path.join(os.path.dirname(
@@ -46,7 +48,7 @@ class App(customtkinter.CTk):
             # Ligeramente más angosto
             self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "gray10"))
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(10, weight=1)
+        self.navigation_frame.grid_rowconfigure(12, weight=1)
 
         border_right_frame = customtkinter.CTkFrame(
             self.menu_container_frame, width=2, fg_color="gray50", corner_radius=0)
@@ -54,8 +56,8 @@ class App(customtkinter.CTk):
 
         # Label del menu
         self.navigation_frame_label = customtkinter.CTkLabel(
-            self.navigation_frame, text="UNEMI", compound="left", **estilo_label_menu)
-        self.navigation_frame_label.grid(row=0, column=0, padx=80, pady=20)
+            self.navigation_frame, text="TOTALMATH", compound="left", **estilo_label_menu)
+        self.navigation_frame_label.grid(row=0, column=0, padx=40, pady=20)
 
         # Botones del menú
         self.menu_buttons = {
@@ -66,7 +68,10 @@ class App(customtkinter.CTk):
             "Gráficas 3D": self.graficas_3D_button_event,
             "Derivación": self.derivacion_button_event,
             "Integración": self.integracion_button_event,
-            "Ecuaciones": self.ecuacion_button_event,
+            "Ecuaciones Diferenciales": self.ecuacion_diferencial_button_event,
+            "Sistemas de Ecuaciones": self.sistema_ecuaciones_button_event,
+            "Sistema Diferencial": self.sistema_diferencial_button_event,
+            "Modelo Matematico": self.modelo_matematico_button_event,
             "Acerca de": self.acerca_de_button_event
         }
 
@@ -108,8 +113,11 @@ class App(customtkinter.CTk):
         self.graficas_3D = Grafica3D(self.scrollable_frame)
         self.derivacion = Derivacion(self.scrollable_frame)
         self.integracion = Integracion(self.scrollable_frame)
-        self.ecuaciones = Ecuacion(self.scrollable_frame)
+        self.ecuaciones_diferenciales = UIEcuacionDiferencial(self.scrollable_frame)
+        self.sistemas_de_ecuaciones = UISistemaEcuaciones(self.scrollable_frame)
+        self.modelo_matematico = UIModeloMatematico(self.scrollable_frame)
         self.acerca_de = AcercaDe(self.scrollable_frame)
+        self.sistema_diferencial = UISistemaDiferencial(self.scrollable_frame)
 
         self.selected_button = None
 
@@ -156,15 +164,23 @@ class App(customtkinter.CTk):
         self.select_frame_by_name("integración")
         self.integracion.mostrar_contenido()
 
-    def ecuacion_button_event(self):
-        self.select_frame_by_name("ecuaciones")
-        self.ecuaciones.mostrar_contenido()
+    def ecuacion_diferencial_button_event(self):
+        self.select_frame_by_name("ecuaciones_diferenciales")
+        self.ecuaciones_diferenciales._build_ui()
+
+    def sistema_ecuaciones_button_event(self):
+        self.select_frame_by_name("sistemas_de_ecuaciones")
+        self.sistemas_de_ecuaciones._build_ui()
+        
+    def modelo_matematico_button_event(self):
+        self.select_frame_by_name("modelo_matematico")
+        self.modelo_matematico._build_ui()
 
     def acerca_de_button_event(self):
         self.select_frame_by_name("acerca_de")
         self.acerca_de.mostrar_contenido()
 
+    def sistema_diferencial_button_event(self):
+        self.select_frame_by_name("sistema_diferencial")
+        self.sistema_diferencial._build_ui()
 
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()

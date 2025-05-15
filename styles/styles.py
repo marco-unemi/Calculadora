@@ -1,5 +1,5 @@
 estilo_label_menu = {
-    "font": ("Arial", 32, "bold"),
+    "font": ("Arial", 24, "bold"),
     "text_color": "orange"
 }
 
