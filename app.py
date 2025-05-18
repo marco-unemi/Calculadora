@@ -13,11 +13,10 @@ from core.integracion import Integracion
 from core.acerca_de import AcercaDe
 from core.aleatorios import Aleatorios
 from core.monteCarlo import MonteCarlo
-
-from UI.UI_Ecuaciones_dif import UIEcuacionDiferencial
-from UI.UI_Sistema_de_ecuaciones import UISistemaEcuaciones
-from UI.UI_Modelo_matematico import UIModeloMatematico
-from UI.UI_SistemaDiferencial import UISistemaDiferencial
+from core.ecuaciones_dif import EcuacionDiferencial
+from core.sistema_de_ecuaciones import SistemaEcuaciones
+from core.modelo_SIR import ModeloMatematico
+from core.sistemaDiferencial import SistemaDiferencial
 
 import tkinter
 tkinter.Tcl().eval('proc bgerror {msg} {}')
@@ -120,11 +119,11 @@ class App(customtkinter.CTk):
         self.graficas_3D = Grafica3D(self.scrollable_frame)
         self.derivacion = Derivacion(self.scrollable_frame)
         self.integracion = Integracion(self.scrollable_frame)
-        self.ecuaciones_diferenciales = UIEcuacionDiferencial(self.scrollable_frame)
-        self.sistemas_de_ecuaciones = UISistemaEcuaciones(self.scrollable_frame)
-        self.modelo_matematico = UIModeloMatematico(self.scrollable_frame)
+        self.ecuaciones_diferenciales = EcuacionDiferencial(self.scrollable_frame)
+        self.sistemas_de_ecuaciones = SistemaEcuaciones(self.scrollable_frame)
+        self.modelo_matematico = ModeloMatematico(self.scrollable_frame)
         self.acerca_de = AcercaDe(self.scrollable_frame)
-        self.sistema_diferencial = UISistemaDiferencial(self.scrollable_frame)
+        self.sistema_diferencial = SistemaDiferencial(self.scrollable_frame)
         self.aleatorios = Aleatorios(self.scrollable_frame)
         self.montecarlo = MonteCarlo(self.scrollable_frame)
 
