@@ -42,9 +42,9 @@ class Grafica3D:
         self.label_funcion_title = ctk.CTkLabel(self.frame_f, text="z = f(x, y):", **estilo_label)
         self.label_funcion_title.pack(pady=5)
         
-        self.entry_funcion = ctk.CTkEntry(self.frame_f, width=200, placeholder_text="Ej: np.cos(x) + np.sin(y)", textvariable=self.funcion)
+        self.entry_funcion = ctk.CTkEntry(self.frame_f, width=200, textvariable=self.funcion)
         self.entry_funcion.pack(pady=5, padx=10)
-        self.entry_funcion.bind("<Return>", lambda event: self.actualizar_funcion())
+        self.entry_funcion.insert(0, "sin(x) + cos(x)")
         
         # --- Boton de vaciar funcion --- #
         self.vaciar_funcion_button = ctk.CTkButton(self.frame_f, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_funcion)
@@ -57,16 +57,16 @@ class Grafica3D:
         self.label_rango_title = ctk.CTkLabel(self.frame_rango, text="Rango de x:", **estilo_label)
         self.label_rango_title.pack(pady=5)
         
-        self.entry_rango_x = ctk.CTkEntry(self.frame_rango, width=200, placeholder_text="Ej: -10, 10", textvariable=self.rango_x)
+        self.entry_rango_x = ctk.CTkEntry(self.frame_rango, width=200, textvariable=self.rango_x)
         self.entry_rango_x.pack(pady=5, padx=10)
-        self.entry_rango_x.bind("<Return>", lambda event: self.actualizar_rango())
+        self.entry_rango_x.insert(0, "-10, 10")
         
         self.label_rango_title = ctk.CTkLabel(self.frame_rango, text="Rango de y:", **estilo_label)
         self.label_rango_title.pack(pady=5)
         
-        self.entry_rango_y = ctk.CTkEntry(self.frame_rango, width=200, placeholder_text="Ej: -10, 10", textvariable=self.rango_y)
+        self.entry_rango_y = ctk.CTkEntry(self.frame_rango, width=200, textvariable=self.rango_y)
         self.entry_rango_y.pack(pady=5, padx=10)
-        self.entry_rango_y.bind("<Return>", lambda event: self.actualizar_rango())
+        self.entry_rango_y.insert(0, "-10, 10")
         
         # --- Boton de vaciar rango --- #
         self.vaciar_rango_button = ctk.CTkButton(self.frame_rango, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_rango)
@@ -91,49 +91,6 @@ class Grafica3D:
         self.frame_resultado_grid = ctk.CTkFrame(self.frame_resultado, width=400, fg_color=("white", "gray10")) 
         self.frame_resultado_grid.pack(pady=10)
 
-    def actualizar_funcion(self):
-        try:
-            texto = self.entry_funcion.get()
-            # Verificar que la función es válida evaluándola en un punto
-            x = 0
-            y = 0   
-            namespace = {'np': np, 'x': x, 'y': y}
-            eval(texto, namespace)
-            self.funcion = texto
-        except Exception:
-            self.funcion = None
-            
-    def actualizar_rango(self):
-        try:
-            texto_x = self.entry_rango_x.get()
-            texto_y = self.entry_rango_y.get()
-            
-            # Si el usuario ingresó dos números separados por coma
-            if ',' in texto_x:
-                numeros = [float(x.strip()) for x in texto_x.split(',')]
-                if len(numeros) != 2:
-                    raise ValueError("Debe ingresar dos números separados por coma")
-                self.rango_x = numeros
-            else:
-                # Si el usuario ingresó en formato lista/tupla
-                self.rango_x = eval(texto_x)
-                if not isinstance(self.rango_x, (list, tuple)) or len(self.rango_x) != 2:
-                    raise ValueError("El rango debe ser dos números separados por coma")
-            
-            # Procesar el rango de y    
-            if ',' in texto_y:
-                numeros = [float(x.strip()) for x in texto_y.split(',')]
-                if len(numeros) != 2:
-                    raise ValueError("Debe ingresar dos números separados por coma")
-                self.rango_y = numeros
-            else:
-                # Si el usuario ingresó en formato lista/tupla
-                self.rango_y = eval(texto_y)
-                if not isinstance(self.rango_y, (list, tuple)) or len(self.rango_y) != 2:
-                    raise ValueError("El rango debe ser dos números separados por coma")
-        except Exception:
-            self.rango_x = None
-            self.rango_y = None
 
     def vaciar_funcion(self):
         self.funcion = None
@@ -145,54 +102,86 @@ class Grafica3D:
         self.entry_rango_x.delete(0, ctk.END)
         self.entry_rango_y.delete(0, ctk.END)
 
-    def graficar_funcion(self):
-        print(f"Funcion Z: {self.funcion}")
-        print(f"Rango X: {self.rango_x}")
-        print(f"Rango Y: {self.rango_y}")
-        
-        if self.funcion is None:
-            messagebox.showerror("Error", "Debe ingresar una funcion")
-            return
-        
+    def _leer_entradas_funcion_3d(self):
         try:
-            
-            x_min, x_max = self.rango_x
-            y_min, y_max = self.rango_y
+            funcion_str = self.entry_funcion.get().strip()
+            rango_x_str = self.entry_rango_x.get().strip()
+            rango_y_str = self.entry_rango_y.get().strip()
+            if not funcion_str or not rango_x_str or not rango_y_str:
+                raise ValueError("Debe ingresar una función y ambos rangos.")
+            if 'np.' in funcion_str:
+                raise ValueError("No escribas 'np.' en la función. Solo usa sin(x), cos(x), etc. sin prefijo np.")
+            # Procesar rango x
+            if ',' in rango_x_str:
+                numeros_x = [float(x.strip()) for x in rango_x_str.split(',')]
+                if len(numeros_x) != 2:
+                    raise ValueError("El rango de x debe ser dos números separados por coma.")
+                rango_x = numeros_x
+            else:
+                rango_x = eval(rango_x_str)
+                if not isinstance(rango_x, (list, tuple)) or len(rango_x) != 2:
+                    raise ValueError("El rango de x debe ser dos números separados por coma o lista/tupla.")
+            # Procesar rango y
+            if ',' in rango_y_str:
+                numeros_y = [float(y.strip()) for y in rango_y_str.split(',')]
+                if len(numeros_y) != 2:
+                    raise ValueError("El rango de y debe ser dos números separados por coma.")
+                rango_y = numeros_y
+            else:
+                rango_y = eval(rango_y_str)
+                if not isinstance(rango_y, (list, tuple)) or len(rango_y) != 2:
+                    raise ValueError("El rango de y debe ser dos números separados por coma o lista/tupla.")
+            return funcion_str, rango_x, rango_y
+        except Exception as e:
+            messagebox.showerror("Error", f"Error en las entradas: {e}")
+            return None
+
+    def graficar_funcion(self):
+        entradas = self._leer_entradas_funcion_3d()
+        if entradas is None:
+            return
+        funcion_str, rango_x, rango_y = entradas
+        print(f"Funcion Z: {funcion_str}")
+        print(f"Rango X: {rango_x}")
+        print(f"Rango Y: {rango_y}")
+        try:
+            x_min, x_max = rango_x
+            y_min, y_max = rango_y
             n_puntos = 100
-            
             x = np.linspace(x_min, x_max, n_puntos)
             y = np.linspace(y_min, y_max, n_puntos)
-            
             X, Y = np.meshgrid(x, y)
-            
-            def f(x, y):
-                try:
-                    funcion_eval = self.funcion.replace('sp.', 'np.')
-                    return eval(funcion_eval)
-                except (NameError, TypeError, SyntaxError):
-                    messagebox.showerror("Error", "Función inválida. Asegúrese de usar 'x', 'y' y funciones de NumPy.")
-                    return np.nan * X
-            
-            Z = f(X, Y)
-            
+            namespace = {
+                'np': np,
+                'sin': np.sin,
+                'cos': np.cos,
+                'tan': np.tan,
+                'exp': np.exp,
+                'log': np.log,
+                'sqrt': np.sqrt,
+                'arcsin': np.arcsin,
+                'arccos': np.arccos,
+                'arctan': np.arctan,
+                'abs': np.abs,
+                'x': X,
+                'y': Y
+            }
+            Z = eval(funcion_str, namespace)
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
             ax.plot_surface(X, Y, Z, cmap='viridis')
             ax.set_xlabel("eje x")
             ax.set_ylabel("eje y")
             ax.set_zlabel("eje z")
-            ax.set_title(f"f(x, y) = {self.funcion.replace('np.', '').replace('exp', 'e^')}")
+            ax.set_title(f"f(x, y) = {funcion_str.replace('np.', '').replace('exp', 'e^')}")
             ax.grid(True)
-            
             # Limpiar el frame de resultado anterior
             for widget in self.frame_resultado_grid.winfo_children():
                 widget.destroy()
-
             # Crear un canvas para la figura
             canvas = FigureCanvasTkAgg(fig, master=self.frame_resultado_grid)
             canvas.get_tk_widget().pack(fill="both", expand=True)
             canvas.draw()
-
         except ValueError:
             messagebox.showerror("Error", "Rango o número de puntos inválido. Asegúrese de ingresar números.")
         except Exception as e:

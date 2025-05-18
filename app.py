@@ -11,16 +11,21 @@ from core.grafica3d import Grafica3D
 from core.derivacion import Derivacion
 from core.integracion import Integracion
 from core.acerca_de import AcercaDe
+from core.aleatorios import Aleatorios
+from core.monteCarlo import MonteCarlo
 
 from UI.UI_Ecuaciones_dif import UIEcuacionDiferencial
 from UI.UI_Sistema_de_ecuaciones import UISistemaEcuaciones
 from UI.UI_Modelo_matematico import UIModeloMatematico
 from UI.UI_SistemaDiferencial import UISistemaDiferencial
 
+import tkinter
+tkinter.Tcl().eval('proc bgerror {msg} {}')
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry("1000x600")
+        self.geometry("1000x650")
         self._set_appearance_mode("System")
         self.title("TotalMath")
         self.scrollable_frame = None
@@ -48,7 +53,7 @@ class App(customtkinter.CTk):
             # Ligeramente más angosto
             self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "gray10"))
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(12, weight=1)
+        self.navigation_frame.grid_rowconfigure(14, weight=1)
 
         border_right_frame = customtkinter.CTkFrame(
             self.menu_container_frame, width=2, fg_color="gray50", corner_radius=0)
@@ -72,9 +77,11 @@ class App(customtkinter.CTk):
             "Sistemas de Ecuaciones": self.sistema_ecuaciones_button_event,
             "Sistema Diferencial": self.sistema_diferencial_button_event,
             "Modelo Matematico": self.modelo_matematico_button_event,
+            "Generación de Números": self.aleatorios_button_event,
+            "Monte Carlo": self.montecarlo_button_event,
             "Acerca de": self.acerca_de_button_event
         }
-
+        
         self.menu_buttons_widgets = {}
 
         # Mostrar los botones
@@ -118,8 +125,17 @@ class App(customtkinter.CTk):
         self.modelo_matematico = UIModeloMatematico(self.scrollable_frame)
         self.acerca_de = AcercaDe(self.scrollable_frame)
         self.sistema_diferencial = UISistemaDiferencial(self.scrollable_frame)
+        self.aleatorios = Aleatorios(self.scrollable_frame)
+        self.montecarlo = MonteCarlo(self.scrollable_frame)
+
 
         self.selected_button = None
+
+        # Mostrar pantalla de matrices por defecto
+        self.select_frame_by_name("matrices")
+        self.matrices.mostrar_contenido()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def select_frame_by_name(self, name):
         if self.selected_button:
@@ -184,3 +200,18 @@ class App(customtkinter.CTk):
         self.select_frame_by_name("sistema_diferencial")
         self.sistema_diferencial._build_ui()
 
+    def aleatorios_button_event(self):
+        self.select_frame_by_name("generación_de_números")
+        self.aleatorios._build_ui()
+
+    def montecarlo_button_event(self):
+        self.select_frame_by_name("monte_carlo")
+        self.montecarlo._build_ui()
+
+    def on_closing(self):
+        # Aquí puedes cancelar timers o tareas pendientes si tienes
+        self.destroy()
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()

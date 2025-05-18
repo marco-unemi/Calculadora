@@ -31,9 +31,9 @@ class Derivacion:
         self.label_funcion = ctk.CTkLabel(self.frame_funcion, text="Función:", **estilo_label)
         self.label_funcion.pack(pady=5)
         
-        self.entry_funcion = ctk.CTkEntry(self.frame_funcion, width=200, placeholder_text="Ej: cos(x) + 2**x")
+        self.entry_funcion = ctk.CTkEntry(self.frame_funcion, width=200, textvariable=self.funcion)
         self.entry_funcion.pack(pady=5, padx=10)
-        self.entry_funcion.bind("<Return>", lambda event: self.actualizar_funcion())
+        self.entry_funcion.insert(0, "cos(x) + 2**x")
         
         # --- Boton de vaciar función --- #
         self.vaciar_funcion_button = ctk.CTkButton(self.frame_funcion, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_funcion)
@@ -46,9 +46,9 @@ class Derivacion:
         self.label_evaluar = ctk.CTkLabel(self.frame_evaluar, text="Evaluar:", **estilo_label)
         self.label_evaluar.pack(pady=5)
         
-        self.entry_evaluar = ctk.CTkEntry(self.frame_evaluar, width=200, placeholder_text="Ej: 2")
+        self.entry_evaluar = ctk.CTkEntry(self.frame_evaluar, width=200, textvariable=self.evaluar)
         self.entry_evaluar.pack(pady=5, padx=10)
-        self.entry_evaluar.bind("<Return>", lambda event: self.actualizar_evaluar())
+        self.entry_evaluar.insert(0, "2")   
         
         # --- Boton de vaciar evaluar --- #
         self.vaciar_evaluar_button = ctk.CTkButton(self.frame_evaluar, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_evaluar)
@@ -90,23 +90,6 @@ class Derivacion:
         self.frame_resultado_grid.grid(row=0, column=1, padx=(5,20), pady=10, sticky="nsew")
         
         
-    def actualizar_funcion(self):
-        try:
-            texto = self.entry_funcion.get()
-            self.funcion = texto
-            print(self.funcion)
-        except Exception:
-            self.funcion = None
-                
-                
-    def actualizar_evaluar(self):
-        try:
-            texto = self.entry_evaluar.get()
-            self.evaluar = texto
-            print(self.evaluar)
-        except Exception:
-            self.evaluar = None
-                
         
     def vaciar_funcion(self):
         self.funcion = None
@@ -116,53 +99,81 @@ class Derivacion:
         self.evaluar = None
         self.entry_evaluar.delete(0, ctk.END)
         
+    def _leer_entradas_derivacion(self):
+        try:
+            funcion_str = self.entry_funcion.get().strip()
+            evaluar_str = self.entry_evaluar.get().strip()
+            if not funcion_str:
+                raise ValueError("La función no puede estar vacía.")
+            if not evaluar_str:
+                evaluar_val = None
+            else:
+                evaluar_val = float(evaluar_str)
+            return funcion_str, evaluar_val
+        except Exception as e:
+            self.mostrar_error(self.frame_resultado_grid, f"Error en las entradas: {e}")
+            return None
+
     def derivada(self):
         try:
-            if self.funcion is None:
+            entradas = self._leer_entradas_derivacion()
+            if entradas is None:
+                return
+            funcion, _ = entradas
+            if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
             # Convertir la función a una expresión simbólica
-            funcion_sympy = sp.sympify(self.funcion)
-            
+            funcion_sympy = sp.sympify(funcion)
             # Calcular la derivada
             derivada = sp.diff(funcion_sympy, x)
-            
             self.mostrar_resultado(derivada, self.frame_resultado_grid, "f'(x) =")
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la derivada: {str(e)}")
             return
-        
+
     def evaluar_derivada(self):
         try:
-            if self.funcion is None:
+            entradas = self._leer_entradas_derivacion()
+            if entradas is None:
+                return
+            funcion, evaluar_val = entradas
+            if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
-            if self.evaluar is None:
+            if evaluar_val is None:
                 self.mostrar_error(self.frame_resultado_grid, "El valor a evaluar no puede estar vacío")
                 return
-            
             # Convertir la función a una expresión simbólica
-            funcion_sympy = sp.sympify(self.funcion)
+            funcion_sympy = sp.sympify(funcion)
             # Calcular la derivada
             derivada = sp.diff(funcion_sympy, x)
-            
             # Evaluar la derivada en el valor especificado
-            resultado = round(derivada.subs(x, self.evaluar).evalf(), 2)
-            
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, f"f'({self.evaluar}) =")
+            resultado = round(derivada.subs(x, evaluar_val).evalf(), 2)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, f"f'({evaluar_val}) =")
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la derivada: {str(e)}")
             return
         
-        
+    def derivada_a_unicode(self, expr):
+        # Convierte una expresión sympy a string con superíndices unicode para los exponentes
+        super_map = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+        s = str(expr).replace("**", "^")
+        # Reemplaza x^n por xⁿ
+        def super_replace(match):
+            base = match.group(1)
+            exp = match.group(2)
+            return base + exp.translate(super_map)
+        import re
+        s = re.sub(r"(x)\^([\-\d]+)", super_replace, s)
+        return s
+
     def mostrar_resultado(self, derivada, frame, label=None):
         # Limpiar el frame de resultados
         for widget in frame.winfo_children():
             widget.destroy()
-        
         for widget in frame.winfo_children():
             widget.destroy()
-            
         if derivada is not None:
             if label:
                 # Mostrar etiqueta
@@ -170,9 +181,8 @@ class Derivacion:
                 self.frame_resultado_label.grid_columnconfigure(0, weight=1)
                 label_widget = ctk.CTkLabel(self.frame_resultado_label, text=label)
                 label_widget.grid(row=0, column=0, sticky="nsew")
-            
-            # Mostrar resultado
-            texto_resultado = str(derivada).replace("**", "^")
+            # Mostrar resultado en Unicode bonito
+            texto_resultado = self.derivada_a_unicode(derivada)
             resultado = ctk.CTkLabel(frame, text=texto_resultado, fg_color=("white", "gray10"))
             resultado.pack(padx=5, pady=5)
         else:

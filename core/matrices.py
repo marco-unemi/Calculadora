@@ -68,6 +68,12 @@ class Matriz:
         self.frame_botones_a.pack(pady=10) 
         self.vaciar_a_button = ctk.CTkButton(self.frame_botones_a, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_matriz_a) 
         self.vaciar_a_button.pack(side="left", padx=5) 
+        self.determinante_a_button = ctk.CTkButton(self.frame_botones_a, text="Determinante", command=self.determinante_a)
+        self.determinante_a_button.pack(side="left", padx=5)
+        self.inversa_a_button = ctk.CTkButton(self.frame_botones_a, text="Inversa", command=self.inversa_a) 
+        self.inversa_a_button.pack(side="left", padx=5)
+        self.transpuesta_a_button = ctk.CTkButton(self.frame_botones_a, text="Transpuesta", command=self.transpuesta_a)
+        self.transpuesta_a_button.pack(side="left", padx=5)
         
         # --- Sección de Matriz B (Columna 1) --- #
         self.frame_matriz_b = ctk.CTkFrame(self.frame_matrices, fg_color=("white", "gray10")) 
@@ -99,36 +105,31 @@ class Matriz:
         self.frame_botones_b.pack(pady=10) 
         self.vaciar_b_button = ctk.CTkButton(self.frame_botones_b, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_matriz_b) 
         self.vaciar_b_button.pack(side="left", padx=5) 
+        self.determinante_b_button = ctk.CTkButton(self.frame_botones_b, text="Determinante", command=self.determinante_b)
+        self.determinante_b_button.pack(side="left", padx=5)
+        self.inversa_b_button = ctk.CTkButton(self.frame_botones_b, text="Inversa", command=self.inversa_b) 
+        self.inversa_b_button.pack(side="left", padx=5)
+        self.transpuesta_b_button = ctk.CTkButton(self.frame_botones_b, text="Transpuesta", command=self.transpuesta_b)
+        self.transpuesta_b_button.pack(side="left", padx=5)
         
         # ------ Fila 2: Botones de Operaciones ------ #
         self.frame_operaciones = ctk.CTkFrame(self.workspace_frame, fg_color=("white", "gray10")) 
         self.frame_operaciones.pack(pady=10, padx=20, fill="x") 
-        self.frame_operaciones.columnconfigure(0, weight=1) 
-        self.frame_operaciones.columnconfigure(1, weight=1) 
-        self.frame_operaciones.columnconfigure(2, weight=1) 
-        self.frame_operaciones.columnconfigure(3, weight=1) 
-        
+        # Eliminar columnconfigure para evitar expansión
+
+        # --- Frame interno para centrar los botones --- #
+        self.frame_botones_operaciones = ctk.CTkFrame(self.frame_operaciones, fg_color=("white", "gray10"))
+        self.frame_botones_operaciones.pack(anchor="center")
+
         # --- Botones --- #
-        self.sumar_button = ctk.CTkButton(self.frame_operaciones, text="Sumar", command=self.sumar)
-        self.sumar_button.grid(row=0, column=0, padx=5, pady=5, sticky="ew") 
-        self.restar_button = ctk.CTkButton(self.frame_operaciones, text="Restar", command=self.restar) 
-        self.restar_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew") 
-        self.multiplicar_button = ctk.CTkButton(self.frame_operaciones, text="Multiplicar", command=self.multiplicar) 
-        self.multiplicar_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
-        self.determinante_a_button = ctk.CTkButton(self.frame_operaciones, text="Determinante (A)", command=self.determinante_a)
-        self.determinante_a_button.grid(row=0, column=3, padx=5, pady=5, sticky="ew") 
-        self.determinante_b_button = ctk.CTkButton(self.frame_operaciones, text="Determinante (B)", command=self.determinante_b)
-        self.determinante_b_button.grid(row=1, column=0, padx=5, pady=5, sticky="ew") 
-        self.inversa_a_button = ctk.CTkButton(self.frame_operaciones, text="Inversa (A)", command=self.inversa_a) 
-        self.inversa_a_button.grid(row=1, column=1, padx=5, pady=5, sticky="ew") 
-        self.inversa_b_button = ctk.CTkButton(self.frame_operaciones, text="Inversa (B)", command=self.inversa_b) 
-        self.inversa_b_button.grid(row=1, column=2, padx=5, pady=5, sticky="ew") 
-        self.transpuesta_a_button = ctk.CTkButton(self.frame_operaciones, text="Transpuesta (A)", command=self.transpuesta_a)
-        self.transpuesta_a_button.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
-        self.transpuesta_b_button = ctk.CTkButton(self.frame_operaciones, text="Transpuesta (B)", command=self.transpuesta_b)
-        self.transpuesta_b_button.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
+        self.sumar_button = ctk.CTkButton(self.frame_botones_operaciones, text="Sumar", command=self.sumar)
+        self.sumar_button.pack(side="left", padx=5, pady=5)
+        self.restar_button = ctk.CTkButton(self.frame_botones_operaciones, text="Restar", command=self.restar)
+        self.restar_button.pack(side="left", padx=5, pady=5)
+        self.multiplicar_button = ctk.CTkButton(self.frame_botones_operaciones, text="Multiplicar", command=self.multiplicar)
+        self.multiplicar_button.pack(side="left", padx=5, pady=5)
         
-        
+
         # ------ Fila 3: Resultado ------ #
         self.frame_resultado = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "gray12"))
         self.frame_resultado.pack(pady=20, padx=20, fill="both", expand=True) 
@@ -155,32 +156,37 @@ class Matriz:
 
     # ------ Funciones para generar matrices ------ #
     def leer_entradas_matrices(self):
+        matriz_a = self.leer_entrada_matriz("A")
+        matriz_b = self.leer_entrada_matriz("B")
+        return matriz_a, matriz_b
+
+    def leer_entrada_matriz(self, cual):
         try:
-            filas_a = int(self.filas_a.get())
-            columnas_a = int(self.columnas_a.get())
-            filas_b = int(self.filas_b.get())
-            columnas_b = int(self.columnas_b.get())
-            matriz_a = np.zeros((filas_a, columnas_a))
-            matriz_b = np.zeros((filas_b, columnas_b))
+            if cual == "A":
+                filas = int(self.filas_a.get())
+                columnas = int(self.columnas_a.get())
+                entries = self.matriz_a_entries
+            elif cual == "B":
+                filas = int(self.filas_b.get())
+                columnas = int(self.columnas_b.get())
+                entries = self.matriz_b_entries
+            else:
+                self.mostrar_error("Parámetro 'cual' debe ser 'A', 'B' o 'AB'.")
+
+            matriz = np.zeros((filas, columnas))
             idx = 0
-            for i in range(filas_a):
-                for j in range(columnas_a):
-                    val = self.matriz_a_entries[idx].get()
+            for i in range(filas):
+                for j in range(columnas):
+                    val = entries[idx].get()
                     if val.strip() == '':
-                        raise ValueError(f"Falta un valor en la matriz A, fila {i+1}, columna {j+1}")
-                    matriz_a[i, j] = float(val)
+                        self.mostrar_error(f"Falta un valor en la matriz {cual}, fila {i+1}, columna {j+1}")
+                    matriz[i, j] = float(val)
                     idx += 1
-            idx = 0
-            for i in range(filas_b):
-                for j in range(columnas_b):
-                    val = self.matriz_b_entries[idx].get()
-                    if val.strip() == '':
-                        raise ValueError(f"Falta un valor en la matriz B, fila {i+1}, columna {j+1}")
-                    matriz_b[i, j] = float(val)
-                    idx += 1
-            self.matriz_a = matriz_a
-            self.matriz_b = matriz_b
-            return matriz_a, matriz_b
+            if cual == "A":
+                self.matriz_a = matriz
+            else:
+                self.matriz_b = matriz
+            return matriz
         except Exception as e:
             raise e
 
@@ -198,7 +204,7 @@ class Matriz:
                     entry.grid(row=i, column=j, padx=5, pady=5)
                     self.matriz_a_entries.append(entry)
         except ValueError:
-            messagebox.showerror("Error", "Ingrese números enteros válidos para las dimensiones de la Matriz A")
+            self.mostrar_error("Ingrese números enteros válidos para las dimensiones de la Matriz A")
             self.matriz_a = None
 
     def generar_matriz_b(self):
@@ -215,7 +221,7 @@ class Matriz:
                     entry.grid(row=i, column=j, padx=5, pady=5)
                     self.matriz_b_entries.append(entry)
         except ValueError:
-            messagebox.showerror("Error:", "Ingrese números enteros válidos para las dimensiones de la Matriz B")
+            self.mostrar_error("Ingrese números enteros válidos para las dimensiones de la Matriz B")
             self.matriz_b = None
 
     def vaciar_matriz_a(self):
@@ -248,108 +254,107 @@ class Matriz:
         
         
     # ------ Operaciones ------ #
-    def sumar(self):
-        try:
-            matriz_a, matriz_b = self.leer_entradas_matrices()
-            if matriz_a.shape != matriz_b.shape:
-                messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
-                return
-            resultado = matriz_a + matriz_b
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A + B =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al sumar matrices: {e}")
-        
-    def restar(self):
-        try:
-            matriz_a, matriz_b = self.leer_entradas_matrices()
-            if matriz_a.shape != matriz_b.shape:
-                messagebox.showerror("Error", "Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
-                return
-            resultado = matriz_a - matriz_b
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A - B =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al restar matrices: {e}")
-        
-    def multiplicar(self):
-        try:
-            matriz_a, matriz_b = self.leer_entradas_matrices()
-            resultado = np.dot(matriz_a, matriz_b)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A × B =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al multiplicar matrices: {e}")
-        
-    def determinante_a(self):
-        try:
-            matriz_a, _ = self.leer_entradas_matrices()
-            resultado = np.linalg.det(matriz_a)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(A) =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_label, f"Error al calcular el determinante de A: {e}")
-        
-    def determinante_b(self):
-        try:
-            _, matriz_b = self.leer_entradas_matrices()
-            resultado = np.linalg.det(matriz_b)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(B) =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_label, f"Error al calcular el determinante de B: {e}")
-        
-    def inversa_a(self):
-        try:
-            matriz_a, _ = self.leer_entradas_matrices()
-            det = np.linalg.det(matriz_a)
-            if det == 0:
-                messagebox.showerror("Error", "La Matriz A no es invertible (su determinante es cero).")
-                return
-            resultado = np.linalg.inv(matriz_a)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A⁻¹ =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la inversa de A: {e}")
-        
-    def inversa_b(self):
-        try:
-            _, matriz_b = self.leer_entradas_matrices()
-            det = np.linalg.det(matriz_b)
-            if det == 0:
-                messagebox.showerror("Error", "La Matriz B no es invertible (su determinante es cero).")
-                return
-            resultado = np.linalg.inv(matriz_b)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'B⁻¹ =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la inversa de B: {e}")
-
-    def transpuesta_a(self):
-        try:
-            matriz_a, _ = self.leer_entradas_matrices()
-            resultado = np.transpose(matriz_a)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Aᵀ =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la transpuesta de A: {e}")
-            
-    def transpuesta_b(self):
-        try:
-            _, matriz_b = self.leer_entradas_matrices()
-            resultado = np.transpose(matriz_b)
-            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Bᵀ =')
-        except Exception as e:
-            self.mostrar_error(self.frame_resultado_grid, f"Error al calcular la transpuesta de B: {e}")
-
-
-    # ------ Funciones para mostrar errores y resultados ------ #
-    def mostrar_error(self, frame, text):
-        for widget in frame.winfo_children():
-            widget.destroy()   
-            
-        self.label_err = ctk.CTkLabel(frame, text=text, text_color="red")
-        self.label_err.pack()
-
-    def mostrar_resultado(self, matriz, frame, label=None):
-        # Limpiar frames
+    def limpiar_frame(self):
         for widget in self.frame_resultado_grid.winfo_children():
             widget.destroy()
             
         for widget in self.frame_resultado_label.winfo_children():
             widget.destroy()
+
+    def mostrar_error(self, mensaje):
+        self.limpiar_frame()
+        label_err = ctk.CTkLabel(self.frame_resultado_grid, text=mensaje, text_color="red")
+        label_err.pack(pady=10)
+
+    def sumar(self):
+        try:
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            if matriz_a.shape != matriz_b.shape:
+                self.mostrar_error("Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
+            resultado = matriz_a + matriz_b
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A + B =')
+        except Exception as e:
+            self.mostrar_error(f"Error al sumar matrices: {e}")
+        
+    def restar(self):
+        try:
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            if matriz_a.shape != matriz_b.shape:
+                self.mostrar_error("Las matrices deben tener el mismo tamaño, la misma cantidad de columnas y de filas.")
+            resultado = matriz_a - matriz_b
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A - B =')
+        except Exception as e:
+            self.mostrar_error(f"Error al restar matrices: {e}")
+        
+    def multiplicar(self):
+        try:
+            matriz_a, matriz_b = self.leer_entradas_matrices()
+            if matriz_a.shape[1] != matriz_b.shape[0]:
+                self.mostrar_error("El número de columnas de A debe ser igual al número de filas de B.")
+            resultado = np.dot(matriz_a, matriz_b)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A × B =')
+        except Exception as e:
+            self.mostrar_error(f"Error al multiplicar matrices: {e}")
+        
+    def determinante_a(self):
+        try:
+            matriz_a = self.leer_entrada_matriz("A")
+            resultado = np.linalg.det(matriz_a)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(A) =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular el determinante de A: {e}")
+        
+    def determinante_b(self):
+        try:
+            matriz_b = self.leer_entrada_matriz("B")
+            resultado = np.linalg.det(matriz_b)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'det(B) =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular el determinante de B: {e}")
+        
+    def inversa_a(self):
+        try:
+            matriz_a = self.leer_entrada_matriz("A")
+            det = np.linalg.det(matriz_a)
+            if det == 0:
+                self.mostrar_error("La Matriz A no es invertible (su determinante es cero).")
+            resultado = np.linalg.inv(matriz_a)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A⁻¹ =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular la inversa de A: {e}")
+        
+    def inversa_b(self):
+        try:
+            matriz_b = self.leer_entrada_matriz("B")
+            det = np.linalg.det(matriz_b)
+            if det == 0:
+                self.mostrar_error("La Matriz B no es invertible (su determinante es cero).")
+            resultado = np.linalg.inv(matriz_b)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'B⁻¹ =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular la inversa de B: {e}")
+
+    def transpuesta_a(self):
+        try:
+            matriz_a = self.leer_entrada_matriz("A")
+            resultado = np.transpose(matriz_a)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Aᵀ =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular la transpuesta de A: {e}")
+            
+    def transpuesta_b(self):
+        try:
+            matriz_b = self.leer_entrada_matriz("B")
+            resultado = np.transpose(matriz_b)
+            self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Bᵀ =')
+        except Exception as e:
+            self.mostrar_error(f"Error al calcular la transpuesta de B: {e}")
+
+
+    # ------ Funciones para mostrar errores y resultados ------ #
+    def mostrar_resultado(self, matriz, frame, label=None):
+        # Limpiar frames
+        self.limpiar_frame()
 
         if matriz is not None:
             # Si es un escalar (determinante)

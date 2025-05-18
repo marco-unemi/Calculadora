@@ -15,7 +15,7 @@ estilo_boton_menu = {
 
 estilo_label_titulos = {
     "font": ("Arial", 28, "bold"),
-    "text_color": "#2510a3"
+    "text_color": "#4a28ea"
 }
 
 

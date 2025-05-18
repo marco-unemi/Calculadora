@@ -36,7 +36,6 @@ class Integracion:
         self.entry_funcion = ctk.CTkEntry(self.frame_funcion, width=200, placeholder_text="Ej: e**x + 2*x")
         self.entry_funcion.pack(pady=5, padx=10)
         self.entry_funcion.insert(0, "e**x + 2*x")
-        self.entry_funcion.bind("<Return>", lambda event: self.actualizar_funcion())
         
         # --- Boton de vaciar función --- #
         self.vaciar_funcion_button = ctk.CTkButton(self.frame_funcion, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_funcion)
@@ -52,7 +51,6 @@ class Integracion:
         self.entry_limites = ctk.CTkEntry(self.frame_limites, width=200, placeholder_text="Ej: 0, 1")
         self.entry_limites.pack(pady=5, padx=10)
         self.entry_limites.insert(0, "0, 1")
-        self.entry_limites.bind("<Return>", lambda event: self.actualizar_limites())
         
         # --- Boton de vaciar limites --- #
         self.vaciar_limites_button = ctk.CTkButton(self.frame_limites, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_limites)
@@ -93,26 +91,6 @@ class Integracion:
         self.frame_resultado_grid = ctk.CTkFrame(self.frame_contenedor, fg_color=("white", "gray10"))
         self.frame_resultado_grid.grid(row=0, column=1, padx=(5,20), pady=10, sticky="nsew")
 
-    def actualizar_funcion(self):
-        try:
-            texto = self.entry_funcion.get()
-            self.funcion = texto
-            print(self.funcion)
-        except Exception:
-            self.funcion = None
-
-    def actualizar_limites(self):
-        try:
-            texto = self.entry_limites.get()
-            # Si el usuario ingresó dos números separados por coma
-            numeros = [float(x.strip()) for x in texto.split(',')]
-            if len(numeros) != 2:
-                print("Debe ingresar dos números separados por coma")
-                return
-            self.limites = numeros
-            print(self.limites) 
-        except Exception:
-            self.limites = None
 
     def vaciar_funcion(self):
         self.funcion = None
@@ -135,9 +113,33 @@ class Integracion:
         except Exception:
             return None
 
+    def _leer_entradas_integracion(self):
+        try:
+            funcion_str = self.entry_funcion.get().strip()
+            limites_str = self.entry_limites.get().strip()
+            if not funcion_str or not limites_str:
+                raise ValueError("Debe ingresar una función y los límites.")
+            # Procesar límites
+            if ',' in limites_str:
+                numeros = [float(x.strip()) for x in limites_str.split(',')]
+                if len(numeros) != 2:
+                    raise ValueError("Los límites deben ser dos números separados por coma.")
+                limites = numeros
+            else:
+                limites = eval(limites_str)
+                if not isinstance(limites, (list, tuple)) or len(limites) != 2:
+                    raise ValueError("Los límites deben ser dos números separados por coma o lista/tupla.")
+            return funcion_str, limites
+        except Exception as e:
+            self.mostrar_error(self.frame_resultado_grid, f"Error en las entradas: {e}")
+            return None
+
     def integrar(self):
         try:
-            funcion = self.get_funcion()
+            entradas = self._leer_entradas_integracion()
+            if entradas is None:
+                return
+            funcion, _ = entradas
             if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
@@ -150,15 +152,16 @@ class Integracion:
                 resultado_str = f"{resultado_str} + C"
             print(resultado)
             self.mostrar_resultado(resultado_str, self.frame_resultado_grid, f"∫ {funcion.replace('**', '^')} =")
-            
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al integrar: {str(e)}")
             return
-            
+
     def evaluar_integracion(self):
         try:
-            funcion = self.get_funcion()
-            limites = self.get_limites()
+            entradas = self._leer_entradas_integracion()
+            if entradas is None:
+                return
+            funcion, limites = entradas
             if not funcion:
                 self.mostrar_error(self.frame_resultado_grid, "La función no puede estar vacía")
                 return
@@ -171,20 +174,30 @@ class Integracion:
             b = limites[1]
             label = f"∫[{a}, {b}] {funcion.replace('**', '^')} ="
             self.mostrar_resultado(resultado, self.frame_resultado_grid, label)
-
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al evaluar integración: {str(e)}")
             print(f"Error al evaluar integración: {str(e)}")
             return
             
+    def integral_a_unicode(self, expr):
+        # Convierte una expresión sympy o string a string con superíndices unicode para los exponentes
+        super_map = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+        s = str(expr).replace("**", "^")
+        # Reemplaza x^n por xⁿ
+        import re
+        def super_replace(match):
+            base = match.group(1)
+            exp = match.group(2)
+            return base + exp.translate(super_map)
+        s = re.sub(r"(x)\^([\-\d]+)", super_replace, s)
+        return s
+
     def mostrar_resultado(self, derivada, frame, label=None):
         # Limpiar el frame de resultados
         for widget in frame.winfo_children():
             widget.destroy()
-        
         for widget in frame.winfo_children():
             widget.destroy()
-            
         if derivada is not None:
             if label:
                 # Mostrar etiqueta
@@ -192,9 +205,8 @@ class Integracion:
                 self.frame_resultado_label.grid_columnconfigure(0, weight=1)
                 label_widget = ctk.CTkLabel(self.frame_resultado_label, text=label)
                 label_widget.grid(row=0, column=0, sticky="nsew")
-            
-            # Mostrar resultado
-            texto_resultado = str(derivada).replace("**", "^")
+            # Mostrar resultado en Unicode bonito
+            texto_resultado = self.integral_a_unicode(derivada)
             resultado = ctk.CTkLabel(frame, text=texto_resultado, fg_color=("white", "gray10"))
             resultado.pack(padx=5, pady=5)
         else:

@@ -4,6 +4,8 @@ from styles.styles import estilo_label_titulos, estilo_label
 from tkinter import messagebox
 import matplotlib.pyplot as plt  
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import re
+import math
 
 
 class Grafica2D:
@@ -41,9 +43,9 @@ class Grafica2D:
         self.label_funcion_title = ctk.CTkLabel(self.frame_f, text="y = f(x):", **estilo_label)
         self.label_funcion_title.pack(pady=5)
         
-        self.entry_funcion = ctk.CTkEntry(self.frame_f, width=200, placeholder_text="Ej: np.cos(x)", textvariable=self.funcion)
+        self.entry_funcion = ctk.CTkEntry(self.frame_f, width=200, textvariable=self.funcion)
         self.entry_funcion.pack(pady=5, padx=10)
-        self.entry_funcion.bind("<Return>", lambda event: self.actualizar_funcion())
+        self.entry_funcion.insert(0, "cos(x)")
         
         # --- Boton de vaciar funcion --- #
         self.vaciar_funcion_button = ctk.CTkButton(self.frame_f, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_funcion)
@@ -56,9 +58,9 @@ class Grafica2D:
         self.label_rango_title = ctk.CTkLabel(self.frame_rango, text="Rango de x:", **estilo_label)
         self.label_rango_title.pack(pady=5)
         
-        self.entry_rango = ctk.CTkEntry(self.frame_rango, width=200, placeholder_text="Ej: -10, 10", textvariable=self.rango)
+        self.entry_rango = ctk.CTkEntry(self.frame_rango, width=200, textvariable=self.rango)
         self.entry_rango.pack(pady=5, padx=10)
-        self.entry_rango.bind("<Return>", lambda event: self.actualizar_rango())
+        self.entry_rango.insert(0, "-10, 10")
         
         # --- Boton de vaciar rango --- #
         self.vaciar_rango_button = ctk.CTkButton(self.frame_rango, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_rango)
@@ -82,35 +84,7 @@ class Grafica2D:
         # Frame para el resultado 
         self.frame_resultado_grid = ctk.CTkFrame(self.frame_resultado, width=400, fg_color=("white", "gray10")) 
         self.frame_resultado_grid.pack(pady=10) 
-        
-    def actualizar_funcion(self):
-        try:
-            texto = self.entry_funcion.get()
-            # Verificar que la función es válida evaluándola en un punto
-            x = 0
-            namespace = {'np': np, 'x': x}
-            eval(texto, namespace)
-            self.funcion = texto
-        except Exception:
-            self.funcion = None
-            
-    def actualizar_rango(self):
-        try:
-            texto = self.entry_rango.get()
-            # Si el usuario ingresó dos números separados por coma
-            if ',' in texto:
-                numeros = [float(x.strip()) for x in texto.split(',')]
-                if len(numeros) != 2:
-                    raise ValueError("Debe ingresar dos números separados por coma")
-                self.rango = numeros
-            else:
-                # Si el usuario ingresó en formato lista/tupla
-                self.rango = eval(texto)
-                if not isinstance(self.rango, (list, tuple)) or len(self.rango) != 2:
-                    raise ValueError("El rango debe ser dos números separados por coma")
-        except Exception:
-            self.rango = None
-            
+    
     def vaciar_funcion(self):
         self.funcion = None
         self.entry_funcion.delete(0, ctk.END)
@@ -119,37 +93,70 @@ class Grafica2D:
         self.rango = None
         self.entry_rango.delete(0, ctk.END)
 
-    def graficar_funcion(self):
-        print(f"Funcion: {self.funcion}")
-        print(f"Rango: {self.rango}")
-        if self.funcion is None or self.rango is None:
-            messagebox.showerror("Error", "Debe ingresar una funcion y un rango validos")
-            return
-        
+    def _leer_entradas_funcion_2d(self):
+        """Lee y valida la función y el rango para graficar. Devuelve (funcion_str, rango_list) o None si hay error."""
         try:
-            x = np.linspace(self.rango[0], self.rango[1], 100)
-            # Evaluar la función usando numpy
-            namespace = {'np': np, 'x': x}
-            y = eval(self.funcion, namespace)
-            
+            funcion_str = self.entry_funcion.get().strip()
+            rango_str = self.entry_rango.get().strip()
+            if not funcion_str or not rango_str:
+                raise ValueError("Debe ingresar una función y un rango.")
+            if 'np.' in funcion_str:
+                raise ValueError("No escribas 'np.' en la función. Solo usa sin(x), cos(x), etc. sin prefijo np.")
+            # Procesar rango
+            if ',' in rango_str:
+                numeros = [float(x.strip()) for x in rango_str.split(',')]
+                if len(numeros) != 2:
+                    raise ValueError("El rango debe ser dos números separados por coma.")
+                rango = numeros
+            else:
+                rango = eval(rango_str)
+                if not isinstance(rango, (list, tuple)) or len(rango) != 2:
+                    raise ValueError("El rango debe ser dos números separados por coma o lista/tupla.")
+            return funcion_str, rango
+        except Exception as e:
+            messagebox.showerror("Error", f"Error en las entradas: {e}")
+            return None
+
+    def graficar_funcion(self):
+        entradas = self._leer_entradas_funcion_2d()
+        if entradas is None:
+            return
+        funcion_str, rango = entradas
+        print(f"Funcion: {funcion_str}")
+        print(f"Rango: {rango}")
+        try:
+            x = np.linspace(rango[0], rango[1], 100)
+            namespace = {
+                'np': np,
+                'math': math,
+                'sin': np.sin,
+                'cos': np.cos,
+                'tan': np.tan,
+                'exp': np.exp,
+                'log': np.log,
+                'sqrt': np.sqrt,
+                'arcsin': np.arcsin,
+                'arccos': np.arccos,
+                'arctan': np.arctan,
+                'abs': np.abs,
+                'x': x
+            }
+            y = eval(funcion_str, namespace)
             # Crear la figura y graficar
             fig, ax = plt.subplots()
             ax.plot(x, y)
             ax.set_xlabel("eje x")
             ax.set_ylabel("eje y")
-            ax.set_title(f"f(x) = {self.funcion.replace('np.', '').replace('exp', 'e^')}")
+            ax.set_title(f"f(x) = {funcion_str.replace('np.', '').replace('exp', 'e^')}")
             ax.grid(True)
-            
             # Limpiar el frame de resultado anterior
             for widget in self.frame_resultado_grid.winfo_children():
                 widget.destroy()
-                
             # Crear el canvas y mostrar la gráfica
             canvas = FigureCanvasTkAgg(fig, master=self.frame_resultado_grid)
             canvas_widget = canvas.get_tk_widget()
             canvas_widget.pack(fill="both", expand=True)
             canvas.draw()
-            
         except Exception as e:
             messagebox.showerror("Error", f"Error al graficar la funcion: {str(e)}")
             return

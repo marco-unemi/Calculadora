@@ -34,9 +34,9 @@ class Vector:
         self.label_vector1_title = ctk.CTkLabel(self.frame_vector1, text="Vector 1", **estilo_label)
         self.label_vector1_title.pack(pady=5)
         
-        self.entry_vector1 = ctk.CTkEntry(self.frame_vector1, width=200, placeholder_text="Ej: 1, 2, 3")
+        self.entry_vector1 = ctk.CTkEntry(self.frame_vector1, width=200, textvariable=self.vector1)
         self.entry_vector1.pack(pady=5, padx=10)
-        self.entry_vector1.bind("<KeyRelease>", lambda event: self.actualizar_vector1())
+        self.entry_vector1.insert(0, "1, 2, 3")
         
         # --- Boton de vaciar vector 1 --- #
         self.vaciar_a_button = ctk.CTkButton(self.frame_vector1, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_vector1)
@@ -49,9 +49,9 @@ class Vector:
         self.label_vector2_title = ctk.CTkLabel(self.frame_vector2, text="Vector 2", **estilo_label)
         self.label_vector2_title.pack(pady=5)
         
-        self.entry_vector2 = ctk.CTkEntry(self.frame_vector2, width=200, placeholder_text="Ej: 1, 2, 3")
+        self.entry_vector2 = ctk.CTkEntry(self.frame_vector2, width=200)
         self.entry_vector2.pack(pady=5, padx=10)
-        self.entry_vector2.bind("<KeyRelease>", lambda event: self.actualizar_vector2())
+        self.entry_vector2.insert(0, "1, 2, 3")
         
         # --- Boton de vaciar vector 2 --- #
         self.vaciar_b_button = ctk.CTkButton(self.frame_vector2, text="Vaciar", fg_color="#df0000", hover_color='#b81414', command=self.vaciar_vector2)
@@ -172,91 +172,115 @@ class Vector:
         self.label_err = ctk.CTkLabel(frame, text=text, text_color="red")
         self.label_err.pack(pady=5)
         
-    def suma_vectores(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
-            return
+    def _leer_entradas_vectores(self):
         try:
-            if len(self.vector1) != len(self.vector2):
+            texto1 = self.entry_vector1.get().strip()
+            texto2 = self.entry_vector2.get().strip()
+            if not texto1:
+                raise ValueError("Debe ingresar el Vector 1.")
+            if not texto2:
+                raise ValueError("Debe ingresar el Vector 2.")
+            vector1 = np.array([float(x.strip()) for x in texto1.split(',')])
+            vector2 = np.array([float(x.strip()) for x in texto2.split(',')])
+            return vector1, vector2
+        except Exception as e:
+            messagebox.showerror("Error", f"Error en las entradas: {e}")
+            return None
+
+    def suma_vectores(self):
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
+            return
+        vector1, vector2 = entradas
+        try:
+            if len(vector1) != len(vector2):
                 messagebox.showerror("Error", "Los vectores deben tener la misma dimensión")
                 return
-            resultado = self.vector1 + self.vector2
+            resultado = vector1 + vector2
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A + B =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al sumar vectores: {e}")
         
     def resta_vectores(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
             return
+        vector1, vector2 = entradas
         try:
-            if len(self.vector1) != len(self.vector2):
+            if len(vector1) != len(vector2):
                 messagebox.showerror("Error", "Los vectores deben tener la misma dimensión")
                 return
-            resultado = self.vector1 - self.vector2
+            resultado = vector1 - vector2
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A - B =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al restar vectores: {e}")
         
     def producto_escalar(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
             return
+        vector1, vector2 = entradas
         try:
-            if len(self.vector1) != len(self.vector2):
+            if len(vector1) != len(vector2):
                 messagebox.showerror("Error", "Los vectores deben tener la misma dimensión")
                 return
-            resultado = np.dot(self.vector1, self.vector2)
+            resultado = np.dot(vector1, vector2)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A · B =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular producto escalar: {e}")
         
     def producto_vectorial(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
             return
+        vector1, vector2 = entradas
         try:
-            if len(self.vector1) != 3 or len(self.vector2) != 3:
+            if len(vector1) != 3 or len(vector2) != 3:
                 messagebox.showerror("Error", "El producto vectorial solo está definido para vectores 3D")
                 return
-            resultado = np.cross(self.vector1, self.vector2)
+            resultado = np.cross(vector1, vector2)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'A × B =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular producto vectorial: {e}")
         
     def magnitud_vector(self):
-        if self.vector1 is None:
+        texto1 = self.entry_vector1.get().strip()
+        if not texto1:
             messagebox.showerror("Error", "Ingrese el vector primero")
             return
         try:
-            resultado = np.linalg.norm(self.vector1)
+            vector1 = np.array([float(x.strip()) for x in texto1.split(',')])
+            resultado = np.linalg.norm(vector1)
             self.mostrar_resultado(resultado, self.frame_resultado_grid, '|A| =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular magnitud: {e}")
         
     def vector_unitario(self):
-        if self.vector1 is None:
+        texto1 = self.entry_vector1.get().strip()
+        if not texto1:
             messagebox.showerror("Error", "Ingrese el vector primero")
             return
         try:
-            magnitud = np.linalg.norm(self.vector1)
+            vector1 = np.array([float(x.strip()) for x in texto1.split(',')])
+            magnitud = np.linalg.norm(vector1)
             if magnitud == 0:
                 messagebox.showerror("Error", "No se puede calcular el vector unitario de un vector nulo")
                 return
-            resultado = self.vector1 / magnitud
+            resultado = vector1 / magnitud
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Vector unitario de A =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular vector unitario: {e}")
         
     def angulo_vectores(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
             return
+        vector1, vector2 = entradas
         try:
-            if len(self.vector1) != len(self.vector2):
+            if len(vector1) != len(vector2):
                 messagebox.showerror("Error", "Los vectores deben tener la misma dimensión")
                 return
-            cos_angle = np.dot(self.vector1, self.vector2) / (np.linalg.norm(self.vector1) * np.linalg.norm(self.vector2))
+            cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
             angle = np.arccos(np.clip(cos_angle, -1.0, 1.0))
             resultado = np.degrees(angle)
             self.mostrar_resultado(f"{resultado:.2f}°", self.frame_resultado_grid, 'Ángulo entre A y B =')
@@ -264,18 +288,19 @@ class Vector:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular ángulo: {e}")
         
     def proyeccion_vector(self):
-        if self.vector1 is None or self.vector2 is None:
-            messagebox.showerror("Error", "Ingrese ambos vectores primero")
+        entradas = self._leer_entradas_vectores()
+        if entradas is None:
             return
+        vector1, vector2 = entradas
         try:
-            if len(self.vector1) != len(self.vector2):
+            if len(vector1) != len(vector2):
                 messagebox.showerror("Error", "Los vectores deben tener la misma dimensión")
                 return
-            v2_norm = np.linalg.norm(self.vector2)
+            v2_norm = np.linalg.norm(vector2)
             if v2_norm == 0:
                 messagebox.showerror("Error", "No se puede proyectar sobre un vector nulo")
                 return
-            resultado = (np.dot(self.vector1, self.vector2) / (v2_norm ** 2)) * self.vector2
+            resultado = (np.dot(vector1, vector2) / (v2_norm ** 2)) * vector2
             self.mostrar_resultado(resultado, self.frame_resultado_grid, 'Proyección de A sobre B =')
         except Exception as e:
             self.mostrar_error(self.frame_resultado_grid, f"Error al calcular proyección: {e}")
