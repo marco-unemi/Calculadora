@@ -35,7 +35,7 @@ Calculadora/
 
 ### Opción 1: Ejecutable para Windows
 
-1. Descarga el archivo `app.exe` desde la carpeta `dist/` o desde la [página de releases](#).
+1. Descarga el archivo `app.exe` desde la carpeta `dist/` o desde Drive [Descargar app.exe](https://drive.google.com/file/d/1EYKJSJv8pDTUH2Q6TpeM-CO4vRF3e2WX/view?usp=drive_link).
 2. Haz doble clic en `app.exe` para ejecutar la aplicación.  
    **No necesitas instalar Python ni dependencias.**
 
