@@ -17,6 +17,7 @@ from core.ecuaciones_dif import EcuacionDiferencial
 from core.sistema_de_ecuaciones import SistemaEcuaciones
 from core.modelo_SIR import ModeloMatematico
 from core.sistemaDiferencial import SistemaDiferencial
+from core.poisson import DistribucionPoisson
 
 import tkinter
 tkinter.Tcl().eval('proc bgerror {msg} {}')
@@ -52,7 +53,7 @@ class App(customtkinter.CTk):
             # Ligeramente más angosto
             self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "gray10"))
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(14, weight=1)
+        self.navigation_frame.grid_rowconfigure(15, weight=1)
 
         border_right_frame = customtkinter.CTkFrame(
             self.menu_container_frame, width=2, fg_color="gray50", corner_radius=0)
@@ -78,6 +79,7 @@ class App(customtkinter.CTk):
             "Modelo Matematico": self.modelo_matematico_button_event,
             "Generación de Números": self.aleatorios_button_event,
             "Monte Carlo": self.montecarlo_button_event,
+            "Distribución de Poisson": self.poisson_button_event,
             "Acerca de": self.acerca_de_button_event
         }
         
@@ -126,6 +128,7 @@ class App(customtkinter.CTk):
         self.sistema_diferencial = SistemaDiferencial(self.scrollable_frame)
         self.aleatorios = Aleatorios(self.scrollable_frame)
         self.montecarlo = MonteCarlo(self.scrollable_frame)
+        self.pisson = DistribucionPoisson(self.scrollable_frame)
 
 
         self.selected_button = None
@@ -206,6 +209,10 @@ class App(customtkinter.CTk):
     def montecarlo_button_event(self):
         self.select_frame_by_name("monte_carlo")
         self.montecarlo._build_ui()
+        
+    def poisson_button_event(self):
+        self.select_frame_by_name("distribución_de_poisson")
+        self.pisson._build_ui()  
 
     def on_closing(self):
         # Aquí puedes cancelar timers o tareas pendientes si tienes
