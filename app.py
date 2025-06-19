@@ -51,7 +51,7 @@ class App(customtkinter.CTk):
         # create navigation frame
         self.navigation_frame = customtkinter.CTkFrame(
             # Ligeramente más angosto
-            self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "gray10"))
+            self.menu_container_frame, corner_radius=0, width=198, fg_color=("white", "#000000"))
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_frame.grid_rowconfigure(15, weight=1)
 

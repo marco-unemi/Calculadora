@@ -33,7 +33,7 @@ class Matriz:
         ctk.CTkLabel(self.workspace_frame, text="Matrices", **estilo_label_titulos).pack(pady=20)
         
         # ------ Fila 1: contenedor de matrices A y B ------ #
-        self.frame_matrices = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "gray12"))
+        self.frame_matrices = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "black"))
         self.frame_matrices.pack(pady=10, padx=20, fill="x") 
         self.frame_matrices.columnconfigure(0, weight=1) 
         self.frame_matrices.columnconfigure(1, weight=1) 

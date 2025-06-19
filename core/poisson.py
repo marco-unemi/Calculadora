@@ -20,7 +20,7 @@ class DistribucionPoisson:
         ctk.CTkLabel(self.workspace_frame, text="Distribución de Poisson", **estilo_label_titulos).pack(pady=20)
 
         # Frame de entradas
-        self.frame_entradas = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "gray12"))
+        self.frame_entradas = ctk.CTkFrame(self.workspace_frame, fg_color=("white", "black"))
         self.frame_entradas.pack(pady=10, padx=20, fill="x")
         self.frame_entradas.columnconfigure(0, weight=1)
         self.frame_entradas.columnconfigure(1, weight=1)
@@ -42,11 +42,11 @@ class DistribucionPoisson:
         self.boton_calcular.grid(row=2, column=0, columnspan=2, pady=10)
 
         # Frame para resultado (gráfica)
-        self.frame_resultado = ctk.CTkFrame(self.workspace_frame, fg_color=("gray93", "gray12"))
+        self.frame_resultado = ctk.CTkFrame(self.workspace_frame, fg_color=("white", "black"))
         self.frame_resultado.pack(pady=10, padx=20)
         self.label_resultado_title = ctk.CTkLabel(self.frame_resultado, text="Resultado:", **estilo_label)
         self.label_resultado_title.pack(pady=5)
-        self.frame_resultado_grid = ctk.CTkFrame(self.frame_resultado, width=800, height=500, fg_color=("white", "gray10"))
+        self.frame_resultado_grid = ctk.CTkFrame(self.frame_resultado, width=800, height=500, fg_color=("white", "black"))
         self.frame_resultado_grid.pack(pady=(10, 0))
 
     def calcular_poisson(self):
